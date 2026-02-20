@@ -1,20 +1,27 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function Quiz() {
   const [questions, setQuestions] = useState([]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const navigate = useNavigate();
 
-  // Appel API au chargement
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // On récupère les choix envoyés depuis Home
+  const { category, difficulty } = location.state;
+
+  // Appel API dynamique
   useEffect(() => {
-    fetch("https://opentdb.com/api.php?amount=10&type=multiple")
+    fetch(
+      `https://opentdb.com/api.php?amount=10&category=${category}&difficulty=${difficulty}&type=multiple`
+    )
       .then((res) => res.json())
       .then((data) => {
         setQuestions(data.results);
       });
-  }, []);
+  }, [category, difficulty]);
 
   // Si l'API n'a pas encore répondu
   if (questions.length === 0) {
@@ -35,6 +42,7 @@ function Quiz() {
     setIndex(index + 1);
   };
 
+  // redirection vers quiz
   if (index >= questions.length) {
     navigate("/score", {
       state: {
@@ -48,6 +56,7 @@ function Quiz() {
   return (
     <div>
       <h2>Question {index + 1} / {questions.length}</h2>
+
       <p dangerouslySetInnerHTML={{ __html: current.question }} />
 
       {answers.map((ans) => (

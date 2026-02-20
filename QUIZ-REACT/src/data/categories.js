@@ -1,0 +1,6 @@
+export const categories = [
+  { id: 9, name: "General Knowledge" },
+  { id: 21, name: "Sports" },
+  { id: 23, name: "History" },
+
+];
