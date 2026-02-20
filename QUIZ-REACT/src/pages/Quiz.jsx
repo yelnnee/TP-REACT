@@ -1,23 +1,27 @@
-import { useState } from "react";
-
-const fakeQuestions = [
-  {
-    question: "Quelle est la capitale de la France ?",
-    correct_answer: "Paris",
-    incorrect_answers: ["Lyon", "Marseille", "Nice"],
-  },
-  {
-    question: "Combien font 2 + 2 ?",
-    correct_answer: "4",
-    incorrect_answers: ["3", "5", "22"],
-  },
-];
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Quiz() {
+  const [questions, setQuestions] = useState([]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const navigate = useNavigate();
 
-  const current = fakeQuestions[index];
+  // Appel API au chargement
+  useEffect(() => {
+    fetch("https://opentdb.com/api.php?amount=10&type=multiple")
+      .then((res) => res.json())
+      .then((data) => {
+        setQuestions(data.results);
+      });
+  }, []);
+
+  // Si l'API n'a pas encore répondu
+  if (questions.length === 0) {
+    return <div>Chargement...</div>;
+  }
+
+  const current = questions[index];
 
   const answers = [
     current.correct_answer,
@@ -31,19 +35,27 @@ function Quiz() {
     setIndex(index + 1);
   };
 
-  if (index >= fakeQuestions.length) {
-    return <div>Fin du quiz ! Score : {score} / {fakeQuestions.length}</div>;
+  if (index >= questions.length) {
+    navigate("/score", {
+      state: {
+        score: score,
+        total: questions.length,
+      },
+    });
+    return null;
   }
 
   return (
     <div>
-      <h2>Question {index + 1} / {fakeQuestions.length}</h2>
-      <p>{current.question}</p>
+      <h2>Question {index + 1} / {questions.length}</h2>
+      <p dangerouslySetInnerHTML={{ __html: current.question }} />
 
       {answers.map((ans) => (
-        <button key={ans} onClick={() => handleAnswer(ans)}>
-          {ans}
-        </button>
+        <button
+          key={ans}
+          onClick={() => handleAnswer(ans)}
+          dangerouslySetInnerHTML={{ __html: ans }}
+        />
       ))}
     </div>
   );
