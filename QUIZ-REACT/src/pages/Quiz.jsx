@@ -5,25 +5,45 @@ function Quiz() {
   const [questions, setQuestions] = useState([]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // On récupère les choix envoyés depuis Home
   const { category, difficulty } = location.state;
 
-  // Appel API dynamique
   useEffect(() => {
     fetch(
       `https://opentdb.com/api.php?amount=10&category=${category}&difficulty=${difficulty}&type=multiple`
     )
       .then((res) => res.json())
       .then((data) => {
+        // Cas 1 : API renvoie 0 questions
+        if (data.results.length === 0) {
+          setError("Aucune question trouvée pour ces paramètres.");
+          return;
+        }
+
         setQuestions(data.results);
+      })
+      .catch(() => {
+        // Cas 2 : API plante
+        setError("Erreur lors du chargement des questions.");
       });
   }, [category, difficulty]);
 
-  // Si l'API n'a pas encore répondu
+  // Cas 3 : erreur → afficher message + bouton retour
+  if (error) {
+    return (
+      <div>
+        <h2>Erreur</h2>
+        <p>{error}</p>
+        <button onClick={() => navigate("/")}>Retour à l'accueil</button>
+      </div>
+    );
+  }
+
+  // Cas 4 : API pas encore chargée
   if (questions.length === 0) {
     return <div>Chargement...</div>;
   }
@@ -42,7 +62,7 @@ function Quiz() {
     setIndex(index + 1);
   };
 
-  // redirection vers quiz
+  // Cas 5 fin du quiz → Score
   if (index >= questions.length) {
     navigate("/score", {
       state: {
