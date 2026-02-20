@@ -10,6 +10,12 @@ function Quiz() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Protection si on arrive sur /quiz sans passer par Home
+  if (!location.state) {
+    navigate("/");
+    return null;
+  }
+
   const { category, difficulty } = location.state;
 
   useEffect(() => {
@@ -18,24 +24,21 @@ function Quiz() {
     )
       .then((res) => res.json())
       .then((data) => {
-        // Cas 1 : API renvoie 0 questions
-        if (data.results.length === 0) {
+        if (!data.results || data.results.length === 0) {
           setError("Aucune question trouvée pour ces paramètres.");
           return;
         }
-
         setQuestions(data.results);
       })
       .catch(() => {
-        // Cas 2 : API plante
         setError("Erreur lors du chargement des questions.");
       });
   }, [category, difficulty]);
 
-  // Cas 3 : erreur → afficher message + bouton retour
+  // Affichage erreur API
   if (error) {
     return (
-      <div>
+      <div className="container">
         <h2>Erreur</h2>
         <p>{error}</p>
         <button onClick={() => navigate("/")}>Retour à l'accueil</button>
@@ -43,9 +46,19 @@ function Quiz() {
     );
   }
 
-  // Cas 4 : API pas encore chargée
+  // Chargement API
   if (questions.length === 0) {
-    return <div>Chargement...</div>;
+    return <div className="container">Chargement...</div>;
+  }
+
+  if (questions.length > 0 && index >= questions.length) {
+    navigate("/score", {
+      state: {
+        score: score,
+        total: questions.length,
+      },
+    });
+    return null;
   }
 
   const current = questions[index];
@@ -57,24 +70,15 @@ function Quiz() {
 
   const handleAnswer = (answer) => {
     if (answer === current.correct_answer) {
-      setScore(score + 1);
+      setScore((prev) => prev + 1);
     }
-    setIndex(index + 1);
+    setIndex((prev) => prev + 1);
   };
 
-  // Cas 5 fin du quiz → Score
-  if (index >= questions.length) {
-    navigate("/score", {
-      state: {
-        score: score,
-        total: questions.length,
-      },
-    });
-    return null;
-  }
+
 
   return (
-    <div>
+    <div className="container">
       <h2>Question {index + 1} / {questions.length}</h2>
 
       <p dangerouslySetInnerHTML={{ __html: current.question }} />

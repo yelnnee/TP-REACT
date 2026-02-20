@@ -18,7 +18,7 @@ function Home() {
   };
 
   return (
-    <div>
+    <div className="container">
       <h1>Quiz OpenTDB</h1>
 
       <label>Catégorie :</label>
